@@ -1,0 +1,40 @@
+#!/bin/bash
+#
+# Runs at the end of git flow release start
+#
+# Positional arguments:
+# $1    The version (including the version prefix)
+# $2    The origin remote
+# $3    The full branch name (including the release prefix)
+# $4    The base from which this release is started
+#
+# The following variables are available as they are exported by git-flow:
+#
+# MASTER_BRANCH - The branch defined as Master
+# DEVELOP_BRANCH - The branch defined as Develop
+#
+
+set -e
+
+VERSION=$1
+ORIGIN=$2
+BRANCH=$3
+BASE=$4
+
+
+# Sanity check to determine root folder of ng-service
+if [ "$(ls -d imob_* | wc -l)" -ne 1 ]; then
+    ls -d imob_*
+    echo "Error: Multiple root folder candidates found. Please adjust git hook: ${0}"
+fi
+
+# __version__ file
+VERSION_FILE=$(git rev-parse --show-toplevel)/imob_*/__init__.py
+
+# Replace version in place
+sed -i.bak -e "s/^__version__[[:space:]]=[[:space:]].[[:digit:]]*.[[:digit:]]*.[[:digit:]]*./__version__ = '$VERSION'/" $VERSION_FILE
+
+git add $VERSION_FILE
+git commit -m "new release: $VERSION"
+
+rm ${VERSION_FILE}.bak

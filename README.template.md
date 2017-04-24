@@ -1,5 +1,4 @@
-SERVICE_NAME
-============
+# SERVICE_NAME
 
 Setup
 -----

@@ -15,14 +15,14 @@ git clone git@github.com:i-mobility/async-scaffold.git $SERVICE_NAME
 cd $SERVICE_NAME
 git remote set-url origin git@github.com:i-mobility/$SERVICE_NAME.git
 
-sed -i 's/SERVICE_NAME/$SERVICE_NAME/g' README.template.md
-rm README.md
-mv README.template.md README.md
+sed -e "s/SERVICE_NAME/"$SERVICE_NAME"/g" README.template.md > README.md
+rm README.template.md
 git commit -am "scaffold initalization for $SERVICE_NAME"
 
-git push origin master
-git checkout develop
-git push origin develop
+git push -u origin master
+git checkout -b develop
+git push -u origin develop
 
 git flow init -d
+./setupgithooks.sh
 ```

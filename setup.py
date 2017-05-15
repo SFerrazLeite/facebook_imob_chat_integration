@@ -29,16 +29,6 @@ setup(
     test_suite='test',
     include_package_data=True,
     zip_safe=False,
-    extras_require={
-        'testing': [
-            'nose2',
-            'cov-core',
-        ],
-        'production': [
-            'gunicorn == 19.7.1',
-            'uvloop == 0.8.0',
-        ]
-    },
     entry_points={
         'console_scripts': [
             'standalone={}.__main__:main'.format(__project__)

@@ -7,6 +7,7 @@ git clone git@github.com:i-mobility/SERVICE_NAME.git
 pyvenv .ve
 .ve/bin/pip install -U pip setuptools wheel
 .ve/bin/pip install -r requirements.txt
+.ve/bin/pip install -e .
 ```
 
 Running Standalone
@@ -33,6 +34,6 @@ Testing
 The following will install testing dependencies and output to `nose2-junit.xml`:
 
 ```bash
-.ve/bin/pip install .[testing]
+.ve/bin/pip install -r requirements-test.txt
 IMOB_DEV_MODE=1 .ve/bin/nose2 --plugin nose2.plugins.junitxml --junit-xml --coverage SERVICE_NAME --with-coverage
 ```

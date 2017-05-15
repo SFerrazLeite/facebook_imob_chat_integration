@@ -1,0 +1,7 @@
+.git*
+githooks
+test
+development.env
+setupgithooks.sh
+*.egg-info
+.idea

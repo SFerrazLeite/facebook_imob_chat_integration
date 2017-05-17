@@ -14,17 +14,23 @@ RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 
 # install requirements
-COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
-
-# copy application source
-COPY ./ ./
-
-# install application
-RUN pip install --no-cache-dir -e . && pip install --no-cache-dir .[production]
+COPY requirements*.txt ./
+RUN pip install --no-cache-dir -r requirements.txt && pip install --no-cache-dir -r requirements-prod.txt
 
 # clean up
 RUN apk del .build-deps
 
+# declare public port
 EXPOSE 80
-CMD gunicorn imob_async_service.app:app --bind 0.0.0.0:80 --worker-class aiohttp.GunicornUVLoopWebWorker
+
+# default entry point
+CMD gunicorn imob_flutschbot.app:app --bind 0.0.0.0:80 --worker-class aiohttp.GunicornUVLoopWebWorker
+
+# copy application source
+COPY ./ ./
+
+# compile locales
+RUN python setup.py compile_catalog -d imob_flutschbot/locale/ -f
+
+# install application
+RUN pip install --no-cache-dir -e .

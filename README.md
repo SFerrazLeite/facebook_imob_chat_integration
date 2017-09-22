@@ -1,28 +1,39 @@
-iMobility Async Service Scaffold
-================================
+# facebook_imob_chat_integration
 
-This project has everything for you to kick off a new microservice based on `aiohttp`.
+Setup
+-----
+```bash
+git clone git@github.com:i-mobility/facebook_imob_chat_integration.git
+pyvenv .ve
+.ve/bin/pip install -U pip setuptools wheel
+.ve/bin/pip install -r requirements.txt
+.ve/bin/pip install -e .
+```
 
-Initialization
---------------
-After creating a new GitHub repository (do not initialize with a README), execute the following commands,
-modifying the first line to fit the name of your repository:
+Running Standalone
+------------------
+```bash
+.ve/bin/python -m imob_*
+```
+
+Building
+--------
+```bash
+docker build . -t imobility/facebook_imob_chat_integration
+```
+
+Deploying
+---------
+* Define deployment specs for kubnernetes in the `deployment` directory.
+* Remember to forward any ports you might need (defaults to 80).
+* Apply with `kubectl apply`.
+
+
+Testing
+-------
+The following will install testing dependencies and output to `nose2-junit.xml`:
 
 ```bash
-export SERVICE_NAME=new-service
-
-git clone git@github.com:i-mobility/async-scaffold.git $SERVICE_NAME
-cd $SERVICE_NAME
-git remote set-url origin git@github.com:i-mobility/$SERVICE_NAME.git
-
-sed -e "s/SERVICE_NAME/"$SERVICE_NAME"/g" README.template.md > README.md
-rm README.template.md
-git commit -am "scaffold initalization for $SERVICE_NAME"
-
-git push -u origin master
-git checkout -b develop
-git push -u origin develop
-
-git flow init -d
-./setupgithooks.sh
+.ve/bin/pip install -r requirements-test.txt
+IMOB_DEV_MODE=1 .ve/bin/nose2 --plugin nose2.plugins.junitxml --junit-xml --coverage facebook_imob_chat_integration --with-coverage
 ```

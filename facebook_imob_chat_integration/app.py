@@ -1,8 +1,26 @@
 from os import environ, path
 
-from aiohttp import web
+from aiohttp import web, ClientSession
+from aiohttp.abc import AbstractCookieJar
 
-from imob_async_service.endpoints import ROUTES
+from facebook_imob_chat_integration.endpoints import ROUTES
+
+
+class NullCookieJar(AbstractCookieJar):
+    def __iter__(self):
+        return iter([])
+
+    def __len__(self):
+        return 0
+
+    def update_cookies(self, cookies, response_url=None):
+        pass
+
+    def filter_cookies(self, request_url):
+        return []
+
+    def clear(self):
+        pass
 
 
 def init_app(config=None):
@@ -11,6 +29,16 @@ def init_app(config=None):
 
     for method, route, handler in ROUTES:
         async_app.router.add_route(method, route, handler)
+
+    async def init_http_client(_app):
+        _app['client'] = ClientSession(cookie_jar=NullCookieJar())
+
+    async def close_http_client(_app):
+        if not _app['client'].closed:
+            _app['client'].close()
+
+    async_app.on_startup.append(init_http_client)
+    async_app.on_cleanup.append(close_http_client)
 
     return async_app
 

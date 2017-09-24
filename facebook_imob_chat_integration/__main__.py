@@ -1,6 +1,6 @@
 from aiohttp import web
 
-from imob_async_service.app import app
+from facebook_imob_chat_integration.app import app
 
 
 def main():

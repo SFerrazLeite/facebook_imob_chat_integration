@@ -1,26 +1,29 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: facebook_chat
+  name: facebook-chat
   namespace: dev
   labels:
-    app: facebook_chat
+    app: facebook-chat
 spec:
   replicas: 1
   revisionHistoryLimit: 0
   selector:
     matchLabels:
-      app: facebook_chat
+      app: facebook-chat
   template:
     metadata:
       namespace: dev
       labels:
-        app: facebook_chat
+        app: facebook-chat
     spec:
       containers:
         - image: imobility/facebook_imob_chat_integration:latest
+          env:
+          - name: IMOB_API_URL
+            value: "https://api-stg.i-mobility.at"
           imagePullPolicy: Always
-          name: facebook_chat
+          name: facebook-chat
           ports:
           - containerPort: 80
             protocol: TCP
@@ -30,21 +33,21 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: scaffold
+  name: facebook-chat
   namespace: dev
   labels:
-    app: scaffold
+    app: facebook-chat
 spec:
   type: ClusterIP
   ports:
     - port: 80
   selector:
-    app: scaffold
+    app: facebook-chat
 ---
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: facebook_chat
+  name: facebook-chat
   namespace: dev
   annotations:
     kubernetes.io/ingress.class: nginx
@@ -58,7 +61,7 @@ spec:
   - host: api-dev.i-mobility.at
     http:
       paths:
-      - path: '/v1/facebook_chat'
+      - path: '/facebook_chat'
         backend:
-          serviceName: facebook_chat
+          serviceName: facebook-chat
           servicePort: 80

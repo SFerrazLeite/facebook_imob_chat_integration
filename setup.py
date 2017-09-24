@@ -2,7 +2,7 @@ import os
 
 from setuptools import setup, find_packages
 
-from imob_async_service import __version__, __project__
+from facebook_imob_chat_integration import __version__, __project__
 
 here = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(here, 'README.md')) as f:

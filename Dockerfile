@@ -24,13 +24,10 @@ RUN apk del .build-deps
 EXPOSE 80
 
 # default entry point
-CMD gunicorn imob_flutschbot.app:app --bind 0.0.0.0:80 --worker-class aiohttp.GunicornUVLoopWebWorker
+CMD gunicorn facebook_imob_chat_integration.app:app --bind 0.0.0.0:80 --worker-class aiohttp.GunicornUVLoopWebWorker
 
 # copy application source
 COPY ./ ./
-
-# compile locales
-RUN python setup.py compile_catalog -d imob_flutschbot/locale/ -f
 
 # install application
 RUN pip install --no-cache-dir -e .

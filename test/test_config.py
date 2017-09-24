@@ -1,6 +1,6 @@
 from aiohttp.test_utils import AioHTTPTestCase, unittest_run_loop
 
-from imob_async_service.app import init_app
+from facebook_imob_chat_integration.app import init_app
 
 
 class TestConfig(AioHTTPTestCase):

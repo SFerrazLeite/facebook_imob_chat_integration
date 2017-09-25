@@ -2,60 +2,50 @@ import arrow
 from aiohttp import ClientError
 from aiohttp.web_request import Request
 
-from . import json_response
-
 
 async def get_chat(request):
     body = await request.json()
     from_location_query = body['result']['parameters']['LocationFrom']
     to_location_query = body['result']['parameters']['LocationTo']
-    return await get_chat_routing(request, from_location_query, to_location_query)
+    return await chat_routing(request, from_location_query, to_location_query)
 
-async def get_chat_routing(request, from_location_query, to_location_query):
+async def chat_routing(request, from_location_query, to_location_query, user_id):
     try:
         from_location = await _fetch_location(request, from_location_query)
     except ClientError:
-        return json_response({
-            "speech": "Tut mir leid. Da ist was schief gegangen.",
-            "source": "iMobility"
-        })
+        await send_async_message(request, user_id, "Tut mir leid. Da ist was schief gegangen")
+        return
     if not from_location:
-        return json_response({
-            "speech": "Ich habe den Abfahrtsort {} leider nicht gefunden :(".format(from_location_query),
-            "source": "iMobility"
-        })
-
+        message = "Ich habe den Abfahrtsort {} leider nicht gefunden :(".format(from_location_query)
+        await send_async_message(request, user_id, message)
+        return
     try:
         to_location = await _fetch_location(request, to_location_query)
     except ClientError:
-        return json_response({
-            "speech": "Tut mir leid. Da ist was schief gegangen.",
-            "source": "iMobility"
-        })
+        await send_async_message(request, user_id, "Tut mir leid. Da ist was schief gegangen")
+        return
     if not to_location:
-        return json_response({
-            "speech": "Ich habe den Zielort {} leider nicht gefunden :(".format(to_location_query),
-            "source": "iMobility"
-        })
+        message = "Ich habe den Zielort {} leider nicht gefunden :(".format(to_location_query)
+        await send_async_message(request, user_id, message)
+        return
     try:
         journey = await _fetch_journey(request, from_location, to_location)
     except ClientError:
-        return json_response({
-            "speech": "Tut mir leid. Da ist was schief gegangen.",
-            "source": "iMobility"
-        })
+        await send_async_message(request, user_id, "Tut mir leid. Da ist was schief gegangen")
+        return
     if not journey:
-        return json_response({
-            "speech": "Ich habe leider keine Verbindung von {} nach {} gefunden.".format(from_location_query,
-                                                                                         to_location_query),
-            "source": "iMobility"
-        })
+        message = "Ich habe leider keine Verbindung von {} nach {} gefunden.".format(from_location_query,
+                                                                                     to_location_query),
+        await send_async_message(request, user_id, message)
+        return
+
     transfers = journey.get('transfers', 0)
     if transfers == 0:
         umstiege = 'nicht'
     else:
         umstiege = "{}x".format(transfers)
     first_bubble = "Für deinen Weg brauchst du {} Minuten und musst {} umsteigen".format(journey['duration'], umstiege)
+    await send_async_message(request, user_id, first_bubble)
 
     relevant_sections = _extract_sections(journey)
 
@@ -63,7 +53,7 @@ async def get_chat_routing(request, from_location_query, to_location_query):
     departure_location_name = relevant_sections[0]['departure']['location']['name']
     second_bubble = "Nimm bei {} um {} {} {} Richtung {}.".format(
         departure_location_name,
-        arrow.get(relevant_sections[0]['departure']['datetime']).to('local').format("HH:mm"),
+        arrow.get(relevant_sections[0]['departure']['datetime']).to('Europe/Vienna').format("HH:mm"),
         _get_sumbeans_string(transport),
         transport['line']['name'],
         transport['direction'],
@@ -85,7 +75,7 @@ async def get_chat_routing(request, from_location_query, to_location_query):
         if len(relevant_sections) > 1:
             transport = relevant_sections[-1]['transport']
             departure_location_name = relevant_sections[-1]['departure']['location']['name']
-            last_bubble += "Steige bei {} um in {} {} Richtung {}\n".format(
+            last_bubble += "Steige bei {} um in {} {} Richtung {}. ".format(
                 departure_location_name,
                 _get_sumbeans_string(transport),
                 transport['line']['name'],
@@ -101,16 +91,11 @@ async def get_chat_routing(request, from_location_query, to_location_query):
             relevant_sections[-1]['duration'],
         )
 
-    speech = first_bubble + "\n" + second_bubble
+    message = second_bubble
     for bubble in intermediate_bubbles:
-        speech += "\n" + bubble
-    speech += "\n" + last_bubble
-
-    return json_response({
-        "speech": speech,
-        "source": "iMobility"
-    })
-
+        message += " " + bubble
+    message += "\n" + last_bubble
+    await send_async_message(request, user_id, message)
 
 async def _fetch_location(request: Request, query: str):
     url = request.app['config']['IMOB_API_URL'] + '/routing/api/v2/locations'
@@ -180,3 +165,15 @@ def _get_sumbeans_string(transport):
         'train': "den Zug",
         'tram': "die Bim"
     }.get(sub_means, "das Verkehrsmittel")
+
+
+async def send_async_message(request: Request, user_id, message):
+    broadcast_token = "mELtlMAHYqR0BvgEiMq8zVek3uYUK3OJMbtyrdNPTrQB9ndV0fM7lWTFZbM4MZvD"
+    headers = {'content-type': 'application/json'}
+    params = {
+        "chatfuel_token": broadcast_token,
+        "chatfuel_block_name": "async-message",
+        "imob_message": message
+    }
+    broadcast_url = "https://api.chatfuel.com/bots/59c4d378e4b0569c47c6cdfc/users/{}/send".format(user_id)
+    await request.app['client'].post(broadcast_url, params=params, headers=headers)
